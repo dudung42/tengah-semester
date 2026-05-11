@@ -14,14 +14,12 @@ struct Barang {
 
 Barang *head = NULL;
 
-// HEADER
 void header() {
     cout << "\n==================================================\n";
     cout << "         SISTEM INVENTARIS TOKO ATK\n";
     cout << "==================================================\n";
 }
 
-// TAMBAH
 void tambahBarang() {
     Barang *baru = new Barang();
 
@@ -37,7 +35,6 @@ void tambahBarang() {
     cout << "\nData berhasil ditambahkan.\n";
 }
 
-// TAMPIL (TABEL RAPI)
 void tampilBarang() {
     if (head == NULL) {
         cout << "\nData inventaris masih kosong.\n";
@@ -63,7 +60,6 @@ void tampilBarang() {
     cout << "============================================================\n";
 }
 
-// CARI
 void cariBarang() {
     char kode[10];
     cout << "\n--- Pencarian Barang ---\n";
@@ -86,7 +82,6 @@ void cariBarang() {
     cout << "\nData tidak ditemukan.\n";
 }
 
-// HAPUS
 void hapusBarang() {
     char kode[10];
     cout << "\n--- Hapus Barang ---\n";
@@ -114,7 +109,6 @@ void hapusBarang() {
     cout << "\nData berhasil dihapus.\n";
 }
 
-// SIMPAN KE FILE (menggunakan fwrite - sesuai modul hal 4)
 void simpanFile() {
     FILE *file = fopen("data.dat", "wb");
     
@@ -136,7 +130,6 @@ void simpanFile() {
     cout << "\n" << jumlah << " data berhasil disimpan ke file.\n";
 }
 
-// BACA DARI FILE (menggunakan fread - sesuai modul hal 4)
 void bacaFile() {
     FILE *file = fopen("data.dat", "rb");
     
@@ -147,7 +140,6 @@ void bacaFile() {
     while (1) {
         Barang *baru = new Barang();
         int hasil = fread(baru, sizeof(Barang), 1, file);
-        
         if (hasil != 1) {
             delete baru;
             break;
@@ -164,7 +156,6 @@ void bacaFile() {
     }
 }
 
-// MENU
 void menu() {
     cout << "\nMenu Utama\n";
     cout << "----------------------------------\n";
