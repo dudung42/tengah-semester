@@ -21,7 +21,6 @@ void header() {
 }
 
 void sortingBarang() {
-    // sorting dengan metode bubble sort berdasarkan kode barang
     if (head == NULL) {
         cout << "\nData inventaris masih kosong.\n";
         return;
