@@ -20,6 +20,40 @@ void header() {
     cout << "==================================================\n";
 }
 
+void sortingBarang() {
+    // sorting dengan metode bubble sort berdasarkan kode barang
+    if (head == NULL) {
+        cout << "\nData inventaris masih kosong.\n";
+        return;
+    }
+    Barang *temp1, *temp2;
+    char tempKode[10], tempNama[25];    
+    int tempStok, tempHarga;
+    for (temp1 = head; temp1 != NULL; temp1 = temp1->next) {
+        for (temp2 = temp1->next; temp2 != NULL; temp2 = temp2->next) {
+            if (strcmp(temp1->kode, temp2->kode) > 0) {
+
+                strcpy(tempKode, temp1->kode);
+                strcpy(temp1->kode, temp2->kode);
+                strcpy(temp2->kode, tempKode);
+
+                strcpy(tempNama, temp1->nama);
+                strcpy(temp1->nama, temp2->nama);
+                strcpy(temp2->nama, tempNama);
+
+                tempStok = temp1->stok;
+                temp1->stok = temp2->stok;
+                temp2->stok = tempStok;
+
+                tempHarga = temp1->harga;
+                temp1->harga = temp2->harga;
+                temp2->harga = tempHarga;
+            }
+        }
+    }
+    cout << "\nData berhasil diurutkan berdasarkan kode barang.\n";
+}
+
 void tambahBarang() {
     Barang *baru = new Barang();
 
@@ -161,9 +195,10 @@ void menu() {
     cout << "----------------------------------\n";
     cout << "1. Tambah Data Barang\n";
     cout << "2. Tampilkan Data Barang\n";
-    cout << "3. Cari Barang\n";
-    cout << "4. Hapus Barang\n";
-    cout << "5. Simpan ke File\n";
+    cout << "3. Sorting Data Barang\n";
+    cout << "4. Cari Barang\n";
+    cout << "5. Hapus Barang\n";
+    cout << "6. Simpan ke File\n";
     cout << "0. Keluar\n";
     cout << "----------------------------------\n";
     cout << "Pilih menu: ";
@@ -182,9 +217,10 @@ int main() {
         switch(pilih) {
             case 1: tambahBarang(); break;
             case 2: tampilBarang(); break;
-            case 3: cariBarang(); break;
-            case 4: hapusBarang(); break;
-            case 5: simpanFile(); break;
+            case 3: sortingBarang(); break;
+            case 4: cariBarang(); break;
+            case 5: hapusBarang(); break;
+            case 6: simpanFile(); break;
             case 0: cout << "\nProgram selesai.\n"; break;
             default: cout << "\nPilihan tidak valid.\n";
         }
