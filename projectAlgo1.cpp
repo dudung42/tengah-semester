@@ -1,129 +1,286 @@
 #include <iostream>
 #include <iomanip>
-#include <fstream>
+#include <cstdio>
 #include <cstring>
 using namespace std;
 
+// ======================= STRUCT =======================
 struct Barang {
     char kode[10];
-    char nama[25];
+    char nama[30];
     int stok;
     int harga;
     Barang *next;
 };
 
+// Struct khusus file (tanpa pointer)
+struct DataBarang {
+    char kode[10];
+    char nama[30];
+    int stok;
+    int harga;
+};
+
 Barang *head = NULL;
 
+// ======================= HEADER =======================
 void header() {
-    cout << "\n==================================================\n";
-    cout << "         SISTEM INVENTARIS TOKO ATK\n";
-    cout << "==================================================\n";
+    cout << "+=====+================================+\n";
+    cout << "|      SISTEM INVENTARIS TOKO ATK      |\n";
+    cout << "+=====+================================+\n";
 }
 
-void sortingBarang() {
-    if (head == NULL) {
-        cout << "\nData inventaris masih kosong.\n";
-        return;
-    }
-    Barang *temp1, *temp2;
-    char tempKode[10], tempNama[25];    
-    int tempStok, tempHarga;
-    for (temp1 = head; temp1 != NULL; temp1 = temp1->next) {
-        for (temp2 = temp1->next; temp2 != NULL; temp2 = temp2->next) {
-            if (strcmp(temp1->kode, temp2->kode) > 0) {
+// ======================= VALIDASI =======================
+int inputAngka(string pesan) {
+    int nilai;
 
-                strcpy(tempKode, temp1->kode);
-                strcpy(temp1->kode, temp2->kode);
-                strcpy(temp2->kode, tempKode);
+    while (true) {
+        cout << pesan;
+        cin >> nilai;
 
-                strcpy(tempNama, temp1->nama);
-                strcpy(temp1->nama, temp2->nama);
-                strcpy(temp2->nama, tempNama);
-
-                tempStok = temp1->stok;
-                temp1->stok = temp2->stok;
-                temp2->stok = tempStok;
-
-                tempHarga = temp1->harga;
-                temp1->harga = temp2->harga;
-                temp2->harga = tempHarga;
-            }
+        if (cin.fail() || nilai < 0) {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << "Input tidak valid!\n";
+        } else {
+            return nilai;
         }
     }
-    cout << "\nData berhasil diurutkan berdasarkan kode barang.\n";
 }
 
+// ======================= CEK KODE =======================
+bool cekKode(char kode[]) {
+    Barang *temp = head;
+
+    while (temp != NULL) {
+        if (strcmp(temp->kode, kode) == 0) {
+            return true;
+        }
+        temp = temp->next;
+    }
+
+    return false;
+}
+
+// ======================= AUTO SAVE =======================
+void simpanFile() {
+
+    FILE *file = fopen("data.dat", "wb");
+
+    if (file == NULL) {
+        cout << "\nFile gagal dibuka!\n";
+        return;
+    }
+
+    Barang *temp = head;
+    DataBarang data;
+
+    while (temp != NULL) {
+
+        strcpy(data.kode, temp->kode);
+        strcpy(data.nama, temp->nama);
+        data.stok = temp->stok;
+        data.harga = temp->harga;
+
+        fwrite(&data, sizeof(DataBarang), 1, file);
+
+        temp = temp->next;
+    }
+
+    fclose(file);
+}
+
+// ======================= LOAD FILE =======================
+void bacaFile() {
+
+    FILE *file = fopen("data.dat", "rb");
+
+    if (file == NULL) {
+        return;
+    }
+
+    DataBarang data;
+
+    while (fread(&data, sizeof(DataBarang), 1, file)) {
+
+        Barang *baru = new Barang();
+
+        strcpy(baru->kode, data.kode);
+        strcpy(baru->nama, data.nama);
+        baru->stok = data.stok;
+        baru->harga = data.harga;
+
+        baru->next = NULL;
+
+        if (head == NULL) {
+            head = baru;
+        } else {
+
+            Barang *temp = head;
+
+            while (temp->next != NULL) {
+                temp = temp->next;
+            }
+
+            temp->next = baru;
+        }
+    }
+
+    fclose(file);
+}
+
+// ======================= CREATE =======================
 void tambahBarang() {
+
     Barang *baru = new Barang();
 
-    cout << "\n--- Tambah Data Barang ---\n";
-    cout << "Kode  : "; cin >> baru->kode;
-    cout << "Nama  : "; cin.ignore(); cin.getline(baru->nama, 25);
-    cout << "Stok  : "; cin >> baru->stok;
-    cout << "Harga : "; cin >> baru->harga;
+    cout << "\n--- Tambah Barang ---\n";
 
-    baru->next = head;
-    head = baru;
+    cout << "Kode Barang : ";
+    cin >> baru->kode;
+
+    if (cekKode(baru->kode)) {
+        cout << "\nKode barang sudah ada!\n";
+        delete baru;
+        return;
+    }
+
+    cin.ignore();
+
+    cout << "Nama Barang : ";
+    cin.getline(baru->nama, 30);
+
+    baru->stok = inputAngka("Stok Barang : ");
+    baru->harga = inputAngka("Harga Barang: ");
+
+    baru->next = NULL;
+
+    if (head == NULL) {
+        head = baru;
+    } else {
+
+        Barang *temp = head;
+
+        while (temp->next != NULL) {
+            temp = temp->next;
+        }
+
+        temp->next = baru;
+    }
+
+    simpanFile(); // AUTO SAVE
 
     cout << "\nData berhasil ditambahkan.\n";
 }
 
+// ======================= READ =======================
 void tampilBarang() {
     if (head == NULL) {
-        cout << "\nData inventaris masih kosong.\n";
+        cout << "\nData inventaris kosong.\n";
         return;
     }
 
-    cout << "\n============================================================\n";
-    cout << left << setw(10) << "Kode"
-         << setw(25) << "Nama Barang"
-         << setw(10) << "Stok"
-         << setw(15) << "Harga" << endl;
-    cout << "============================================================\n";
-
     Barang *temp = head;
+
+    cout << "\n";
+    cout << "+----+------------+------------------------------+--------+------------------+\n";
+    cout << "| No | Kode       | Nama Barang                  |  Stok  | Harga            |\n";
+    cout << "+----+------------+------------------------------+--------+------------------+\n";
+
+    int no = 1;
     while (temp != NULL) {
-        cout << left << setw(10) << temp->kode
-             << setw(25) << temp->nama
-             << setw(10) << temp->stok
-             << setw(15) << temp->harga << endl;
+        cout << "| "
+             << left  << setw(2)  << no           << " | "
+             << left  << setw(10) << temp->kode   << " | "
+             << left  << setw(28) << temp->nama   << " | "
+             << left << setw(6)  << temp->stok   << " | "
+             << left << setw(16) << temp->harga  << " |\n";
         temp = temp->next;
+        no++;
     }
 
-    cout << "============================================================\n";
+    cout << "+----+------------+------------------------------+--------+------------------+\n";
 }
 
+// ======================= SEARCH =======================
 void cariBarang() {
+
     char kode[10];
-    cout << "\n--- Pencarian Barang ---\n";
-    cout << "Masukkan kode barang: ";
+
+    cout << "\n--- Cari Barang ---\n";
+    cout << "Masukkan kode barang : ";
     cin >> kode;
 
     Barang *temp = head;
+
     while (temp != NULL) {
+
         if (strcmp(temp->kode, kode) == 0) {
-            cout << "\nData ditemukan:\n";
+
+            cout << "\nData ditemukan\n";
             cout << "Kode  : " << temp->kode << endl;
             cout << "Nama  : " << temp->nama << endl;
             cout << "Stok  : " << temp->stok << endl;
             cout << "Harga : " << temp->harga << endl;
+
             return;
         }
+
         temp = temp->next;
     }
 
     cout << "\nData tidak ditemukan.\n";
 }
 
-void hapusBarang() {
+// ======================= UPDATE =======================
+void editBarang() {
+
     char kode[10];
-    cout << "\n--- Hapus Barang ---\n";
-    cout << "Masukkan kode barang: ";
+
+    cout << "\n--- Edit Barang ---\n";
+    cout << "Masukkan kode barang : ";
     cin >> kode;
 
-    Barang *temp = head, *prev = NULL;
+    Barang *temp = head;
+
+    while (temp != NULL) {
+
+        if (strcmp(temp->kode, kode) == 0) {
+
+            cin.ignore();
+
+            cout << "Nama Baru  : ";
+            cin.getline(temp->nama, 30);
+
+            temp->stok = inputAngka("Stok Baru  : ");
+            temp->harga = inputAngka("Harga Baru : ");
+
+            simpanFile(); // AUTO SAVE
+
+            cout << "\nData berhasil diupdate.\n";
+            return;
+        }
+
+        temp = temp->next;
+    }
+
+    cout << "\nData tidak ditemukan.\n";
+}
+
+// ======================= DELETE =======================
+void hapusBarang() {
+
+    char kode[10];
+
+    cout << "\n--- Hapus Barang ---\n";
+    cout << "Masukkan kode barang : ";
+    cin >> kode;
+
+    Barang *temp = head;
+    Barang *prev = NULL;
 
     while (temp != NULL && strcmp(temp->kode, kode) != 0) {
+
         prev = temp;
         temp = temp->next;
     }
@@ -133,95 +290,184 @@ void hapusBarang() {
         return;
     }
 
-    if (prev == NULL)
+    if (prev == NULL) {
         head = temp->next;
-    else
+    } else {
         prev->next = temp->next;
+    }
 
     delete temp;
+
+    simpanFile(); // AUTO SAVE
+
     cout << "\nData berhasil dihapus.\n";
 }
 
-void simpanFile() {
-    FILE *file = fopen("data.dat", "wb");
-    
-    if (file == NULL) {
-        cout << "\nFile gagal dibuka!\n";
-        return;
-    }
-    
-    Barang *temp = head;
-    int jumlah = 0;
-    
-    while (temp != NULL) {
-        fwrite(temp, sizeof(Barang), 1, file);
-        temp = temp->next;
-        jumlah++;
-    }
-    
-    fclose(file);
-    cout << "\n" << jumlah << " data berhasil disimpan ke file.\n";
-}
+// ======================= SORTING =======================
+void sortHargaAscending() {
 
-void bacaFile() {
-    FILE *file = fopen("data.dat", "rb");
-    
-    if (file == NULL) {
+    if (head == NULL) {
+        cout << "\nData kosong.\n";
         return;
     }
-    
-    while (1) {
-        Barang *baru = new Barang();
-        int hasil = fread(baru, sizeof(Barang), 1, file);
-        if (hasil != 1) {
-            delete baru;
-            break;
+
+    Barang *i, *j;
+    DataBarang temp;
+
+    for (i = head; i != NULL; i = i->next) {
+
+        for (j = i->next; j != NULL; j = j->next) {
+
+            if (i->harga > j->harga) {
+
+                strcpy(temp.kode, i->kode);
+                strcpy(temp.nama, i->nama);
+                temp.stok = i->stok;
+                temp.harga = i->harga;
+
+                strcpy(i->kode, j->kode);
+                strcpy(i->nama, j->nama);
+                i->stok = j->stok;
+                i->harga = j->harga;
+
+                strcpy(j->kode, temp.kode);
+                strcpy(j->nama, temp.nama);
+                j->stok = temp.stok;
+                j->harga = temp.harga;
+            }
         }
-        
-        baru->next = head;
-        head = baru;
     }
-    
-    fclose(file);
-    
-    if (head != NULL) {
-        cout << "\nData dari file berhasil dimuat.\n";
+
+    simpanFile();
+
+    cout << "\nData berhasil diurutkan ascending.\n";
+}
+
+void sortHargaDescending() {
+
+    if (head == NULL) {
+        cout << "\nData kosong.\n";
+        return;
+    }
+
+    Barang *i, *j;
+    DataBarang temp;
+
+    for (i = head; i != NULL; i = i->next) {
+
+        for (j = i->next; j != NULL; j = j->next) {
+
+            if (i->harga < j->harga) {
+
+                strcpy(temp.kode, i->kode);
+                strcpy(temp.nama, i->nama);
+                temp.stok = i->stok;
+                temp.harga = i->harga;
+
+                strcpy(i->kode, j->kode);
+                strcpy(i->nama, j->nama);
+                i->stok = j->stok;
+                i->harga = j->harga;
+
+                strcpy(j->kode, temp.kode);
+                strcpy(j->nama, temp.nama);
+                j->stok = temp.stok;
+                j->harga = temp.harga;
+            }
+        }
+    }
+
+    simpanFile();
+
+    cout << "\nData berhasil diurutkan descending.\n";
+}
+
+// ======================= HAPUS MEMORI =======================
+void hapusSemua() {
+
+    Barang *temp;
+
+    while (head != NULL) {
+
+        temp = head;
+        head = head->next;
+
+        delete temp;
     }
 }
 
+// ======================= MENU =======================
 void menu() {
-    cout << "\nMenu Utama\n";
-    cout << "----------------------------------\n";
-    cout << "1. Tambah Data Barang\n";
-    cout << "2. Tampilkan Data Barang\n";
-    cout << "3. Sorting Data Barang\n";
-    cout << "4. Cari Barang\n";
-    cout << "5. Hapus Barang\n";
-    cout << "6. Simpan ke File\n";
-    cout << "0. Keluar\n";
-    cout << "----------------------------------\n";
-    cout << "Pilih menu: ";
+
+    cout << "\n";
+    cout << "+=====+================================+\n";
+    cout << "| No  |          MENU UTAMA            |\n";
+    cout << "+=====+================================+\n";
+    cout << "| [1] |  Tambah Barang                 |\n";
+    cout << "| [2] |  Tampilkan Barang              |\n";
+    cout << "| [3] |  Cari Barang                   |\n";
+    cout << "| [4] |  Edit Barang                   |\n";
+    cout << "| [5] |  Hapus Barang                  |\n";
+    cout << "| [6] |  Sort Harga Termurah           |\n";
+    cout << "| [7] |  Sort Harga Termahal           |\n";
+    cout << "+=====+================================+\n";
+    cout << "| [0] |  Keluar                        |\n";
+    cout << "+=====+================================+\n";
+    cout << "Pilih menu : ";
 }
 
+// ======================= MAIN =======================
 int main() {
+
     int pilih;
-    
+
     bacaFile();
 
     do {
+
         header();
         menu();
-        cin >> pilih;
 
-        switch(pilih) {
-            case 1: tambahBarang(); break;
-            case 2: tampilBarang(); break;
-            case 3: sortingBarang(); break;
-            case 4: cariBarang(); break;
-            case 5: hapusBarang(); break;
-            case 6: simpanFile(); break;
-            case 0: cout << "\nProgram selesai.\n"; break;
-            default: cout << "\nPilihan tidak valid.\n";
+        pilih = inputAngka("");
+
+        switch (pilih) {
+
+            case 1:
+                tambahBarang();
+                break;
+
+            case 2:
+                tampilBarang();
+                break;
+
+            case 3:
+                cariBarang();
+                break;
+
+            case 4:
+                editBarang();
+                break;
+
+            case 5:
+                hapusBarang();
+                break;
+
+            case 6:
+                sortHargaAscending();
+                break;
+
+            case 7:
+                sortHargaDescending();
+                break;
+
+            case 0:
+                simpanFile();
+                hapusSemua();
+                cout << "\nProgram selesai.\n";
+                break;
+
+            default:
+                cout << "\nMenu tidak valid!\n";
         }
 
     } while (pilih != 0);
